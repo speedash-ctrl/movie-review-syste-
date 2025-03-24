@@ -1,0 +1,53 @@
+from flask import Flask, request, render_template
+import mysql.connector
+
+app = Flask(__name__)
+
+# Connect to MySQL Database
+db = mysql.connector.connect(
+    host="localhost",
+    user="root",  # Change to your MySQL username
+    password="yourpassword",  # Change to your MySQL password
+    database="movie_reviews_db"
+)
+
+cursor = db.cursor()
+
+# Home Page - Show Reviews
+@app.route('/')
+def home():
+    cursor.execute("SELECT movies.title, reviews.reviewer_name, reviews.review_text, reviews.rating FROM reviews JOIN movies ON reviews.movie_id = movies.id")
+    reviews = cursor.fetchall()
+    return render_template("index.html", reviews=reviews)
+
+# Add a Review Page
+@app.route('/add_review', methods=['GET', 'POST'])
+def add_review():
+    if request.method == 'POST':
+        movie_title = request.form['movie_title']
+        reviewer_name = request.form['reviewer_name']
+        review_text = request.form['review_text']
+        rating = int(request.form['rating'])
+
+        # Check if movie exists
+        cursor.execute("SELECT id FROM movies WHERE title = %s", (movie_title,))
+        movie = cursor.fetchone()
+
+        if not movie:
+            cursor.execute("INSERT INTO movies (title) VALUES (%s)", (movie_title,))
+            db.commit()
+            movie_id = cursor.lastrowid
+        else:
+            movie_id = movie[0]
+
+        # Insert review
+        cursor.execute("INSERT INTO reviews (movie_id, reviewer_name, review_text, rating) VALUES (%s, %s, %s, %s)",
+                       (movie_id, reviewer_name, review_text, rating))
+        db.commit()
+
+        return "Review added successfully! <a href='/'>Go back</a>"
+
+    return render_template("add_review.html")
+
+if __name__ == '__main__':
+    app.run(debug=True)
