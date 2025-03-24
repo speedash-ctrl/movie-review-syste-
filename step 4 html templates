@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Movie Reviews</title>
+</head>
+<body>
+    <h1>Movie Reviews</h1>
+    <a href="/add_review">Add a Review</a>
+    <ul>
+        {% for review in reviews %}
+            <li><strong>{{ review[0] }}</strong> - {{ review[1] }} rated {{ review[3] }}/5<br> "{{ review[2] }}"</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
